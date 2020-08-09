@@ -174,18 +174,18 @@ public final class ChannelTest {
 
         final ServerSideConnection connection = event.getConnection();
         final PingPacket pingPacket1 = new PingPacket(789);
-        this.channel.sendTo(connection, pingPacket1)
-                .thenAccept(response1 -> this.logReceived(this.channel, response1, connection))
-                .exceptionally(cause -> {
-                    this.plugin.getLogger().error("Failed to get a response to {}", pingPacket1, cause);
-                    return null;
-                });
+//        this.channel.sendTo(connection, pingPacket1)
+//                .thenAccept(response1 -> this.logReceived(this.channel, response1, connection))
+//                .exceptionally(cause -> {
+//                    this.plugin.getLogger().error("Failed to get a response to {}", pingPacket1, cause);
+//                    return null;
+//                });
 
-        this.basicChannel.play().sendTo(connection, new PrintTextPacket("You successfully joined the server."))
-                .exceptionally(cause -> {
-                    this.plugin.getLogger().error(cause);
-                    return null;
-                });
+//        this.basicChannel.play().sendTo(connection, new PrintTextPacket("You successfully joined the server."))
+//                .exceptionally(cause -> {
+//                    this.plugin.getLogger().error(cause);
+//                    return null;
+//                });
     }
 
     private static String getName(final EngineConnectionSide<?> side) {
