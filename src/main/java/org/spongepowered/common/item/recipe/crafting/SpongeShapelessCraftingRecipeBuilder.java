@@ -35,13 +35,15 @@ import net.minecraft.util.ResourceLocation;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
+import org.spongepowered.api.item.recipe.RecipeRegistration;
 import org.spongepowered.api.item.recipe.crafting.ShapelessCraftingRecipe;
+import org.spongepowered.common.item.recipe.SpongeShapelessCraftingRecipeRegistration;
 import org.spongepowered.common.item.util.ItemStackUtil;
 import org.spongepowered.common.util.SpongeCatalogBuilder;
 
 import javax.annotation.Nullable;
 
-public class SpongeShapelessCraftingRecipeBuilder extends SpongeCatalogBuilder<ShapelessCraftingRecipe, ShapelessCraftingRecipe.Builder>
+public class SpongeShapelessCraftingRecipeBuilder extends SpongeCatalogBuilder<RecipeRegistration<ShapelessCraftingRecipe>, ShapelessCraftingRecipe.Builder>
         implements ShapelessCraftingRecipe.Builder.EndStep, ShapelessCraftingRecipe.Builder.ResultStep {
 
     private ItemStackSnapshot result = ItemStackSnapshot.empty();
@@ -76,21 +78,17 @@ public class SpongeShapelessCraftingRecipeBuilder extends SpongeCatalogBuilder<S
     }
 
     @Override
-    protected ShapelessCraftingRecipe build(ResourceKey key) {
+    protected RecipeRegistration<ShapelessCraftingRecipe> build(ResourceKey key) {
         checkState(!this.ingredients.isEmpty(), "The ingredients are not set.");
         // Copy the ingredient list
-        final NonNullList<Ingredient> ingredients = NonNullList.create();
-        ingredients.addAll(this.ingredients);
-        // TODO generate JSON
-        return (ShapelessCraftingRecipe) new ShapelessRecipe((ResourceLocation) (Object) key, this.groupName,
-                ItemStackUtil.fromSnapshotToNative(this.result), ingredients);
+        return new SpongeShapelessCraftingRecipeRegistration<>((ResourceLocation) (Object) key, this.groupName, this.ingredients, ItemStackUtil.fromSnapshotToNative(this.result));
     }
 
     @Override
     public ShapelessCraftingRecipe.Builder reset() {
         super.reset();
         this.result = ItemStackSnapshot.empty();
-        this.ingredients.clear();
+        this.ingredients = NonNullList.create();
         this.groupName = "";
         return this;
     }

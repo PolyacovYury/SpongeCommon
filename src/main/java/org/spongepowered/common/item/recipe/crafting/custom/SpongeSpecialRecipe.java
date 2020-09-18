@@ -49,10 +49,6 @@ public final class SpongeSpecialRecipe extends SpecialRecipe {
     private final Function<org.spongepowered.api.item.inventory.crafting.CraftingInventory, List<org.spongepowered.api.item.inventory.ItemStack>> remainingItemsFunction;
     private final Function<org.spongepowered.api.item.inventory.crafting.CraftingInventory, org.spongepowered.api.item.inventory.ItemStack> resultFunction;
 
-    public static <S extends IRecipeSerializer<T>, T extends IRecipe<?>> S register(ResourceLocation resourceLocation, S recipeSerializer) {
-        return (S)(Registry.<IRecipeSerializer<?>>register(Registry.RECIPE_SERIALIZER, resourceLocation, recipeSerializer));
-    }
-
     public SpongeSpecialRecipe(ResourceLocation idIn,
             BiPredicate<org.spongepowered.api.item.inventory.crafting.CraftingInventory, ServerWorld> biPredicate,
             Function<org.spongepowered.api.item.inventory.crafting.CraftingInventory, List<org.spongepowered.api.item.inventory.ItemStack>> remainingItemsFunction,

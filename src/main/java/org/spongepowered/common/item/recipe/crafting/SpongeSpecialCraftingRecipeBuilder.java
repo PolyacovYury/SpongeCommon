@@ -34,6 +34,7 @@ import org.spongepowered.api.item.inventory.crafting.CraftingInventory;
 import org.spongepowered.api.item.recipe.crafting.CraftingRecipe;
 import org.spongepowered.api.item.recipe.crafting.SpecialCraftingRecipe;
 import org.spongepowered.api.world.server.ServerWorld;
+import org.spongepowered.common.item.recipe.SpongeRecipeRegistration;
 import org.spongepowered.common.item.recipe.crafting.custom.SpongeSpecialRecipe;
 import org.spongepowered.common.util.SpongeCatalogBuilder;
 
@@ -112,12 +113,8 @@ public final class SpongeSpecialCraftingRecipeBuilder extends SpongeCatalogBuild
 
         // TODO canEmulate with Shapeless/Shaped Serializer
 
-        SpongeSpecialRecipe.register(resourceLocation, new SpecialRecipeSerializer<>(rl ->
-                new SpongeSpecialRecipe(rl,
-                        this.biPredicate,
-                        this.remainingItemsFunction,
-                        this.resultFunction
-                )
+        SpongeRecipeRegistration.register(resourceLocation, new SpecialRecipeSerializer<>(rl ->
+                new SpongeSpecialRecipe(rl, this.biPredicate, this.remainingItemsFunction, this.resultFunction)
         ));
 
         // TODO generate JSON?

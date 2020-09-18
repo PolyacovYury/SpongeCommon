@@ -30,6 +30,7 @@ import com.google.common.reflect.TypeToken;
 import com.google.inject.Singleton;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.minecraft.data.RecipeProvider;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.monster.PhantomEntity;
 import net.minecraft.entity.monster.SpellcastingIllagerEntity;
@@ -39,6 +40,8 @@ import net.minecraft.entity.passive.PandaEntity;
 import net.minecraft.entity.passive.fish.TropicalFishEntity;
 import net.minecraft.entity.projectile.AbstractArrowEntity;
 import net.minecraft.item.ItemTier;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.state.properties.ChestType;
 import net.minecraft.state.properties.DoorHingeSide;
@@ -61,6 +64,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.ResourceKey;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.advancement.Advancement;
 import org.spongepowered.api.advancement.AdvancementTree;
 import org.spongepowered.api.block.BlockType;
@@ -135,6 +139,10 @@ import org.spongepowered.api.item.inventory.equipment.EquipmentGroup;
 import org.spongepowered.api.item.inventory.equipment.EquipmentType;
 import org.spongepowered.api.item.inventory.menu.ClickType;
 import org.spongepowered.api.item.inventory.query.QueryType;
+import org.spongepowered.api.item.recipe.Recipe;
+import org.spongepowered.api.item.recipe.RecipeRegistration;
+import org.spongepowered.api.item.recipe.RecipeRegistry;
+import org.spongepowered.api.item.recipe.RecipeType;
 import org.spongepowered.api.placeholder.PlaceholderParser;
 import org.spongepowered.api.registry.CatalogRegistry;
 import org.spongepowered.api.registry.DuplicateRegistrationException;
@@ -153,6 +161,7 @@ import org.spongepowered.api.world.dimension.DimensionType;
 import org.spongepowered.api.world.dimension.DimensionTypes;
 import org.spongepowered.api.world.portal.PortalType;
 import org.spongepowered.api.world.weather.Weather;
+import org.spongepowered.common.SpongeGame;
 import org.spongepowered.common.accessor.util.registry.SimpleRegistryAccessor;
 import org.spongepowered.common.adventure.SpongeAdventure;
 import org.spongepowered.common.bridge.world.dimension.DimensionTypeBridge;
@@ -573,6 +582,7 @@ public final class SpongeCatalogRegistry implements CatalogRegistry {
         this.generateCallbackRegistry(DataRegistration.class, dataRegistrationKey,
                 (key, value) -> SpongeDataManager.getInstance().registerDataRegistration((SpongeDataRegistration) value));
         this.registerRegistry(SpongeDataRegistration.class, dataRegistrationKey, (Registry) this.getRegistry(DataRegistration.class));
+        this.registerRegistry(RecipeRegistration.class, ResourceKey.sponge("recipe"), true);
 
         // Find a home for this somewhere...a post registries callback
         for (final net.minecraft.world.dimension.DimensionType dimensionType : net.minecraft.world.dimension.DimensionType.getAll()) {

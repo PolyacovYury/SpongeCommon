@@ -35,6 +35,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.item.recipe.RecipeRegistration;
 import org.spongepowered.api.item.recipe.crafting.Ingredient;
 import org.spongepowered.api.item.recipe.crafting.ShapedCraftingRecipe;
 import org.spongepowered.common.accessor.item.crafting.ShapedRecipeAccessor;
@@ -48,7 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public final class SpongeShapedCraftingRecipeBuilder extends SpongeCatalogBuilder<ShapedCraftingRecipe, ShapedCraftingRecipe.Builder> implements
+public final class SpongeShapedCraftingRecipeBuilder extends SpongeCatalogBuilder<RecipeRegistration<ShapedCraftingRecipe>, ShapedCraftingRecipe.Builder> implements
         ShapedCraftingRecipe.Builder, ShapedCraftingRecipe.Builder.AisleStep.ResultStep,
         ShapedCraftingRecipe.Builder.RowsStep.ResultStep, ShapedCraftingRecipe.Builder.EndStep {
 
@@ -140,7 +141,7 @@ public final class SpongeShapedCraftingRecipeBuilder extends SpongeCatalogBuilde
     }
 
     @Override
-    protected ShapedCraftingRecipe build(ResourceKey key) {
+    protected RecipeRegistration<ShapedCraftingRecipe> build(ResourceKey key) {
         checkState(!this.aisle.isEmpty(), "aisle has not been set");
         checkState(!this.ingredientMap.isEmpty(), "no ingredients set");
         checkState(!this.result.isEmpty(), "no result set");
