@@ -22,40 +22,51 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.item.recipe;
+package org.spongepowered.common.item.recipe.crafting;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import net.minecraft.advancements.Advancement;
-import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.item.crafting.ShapedRecipe;
+import net.minecraft.util.JSONUtils;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
-import org.spongepowered.api.ResourceKey;
-import org.spongepowered.api.data.persistence.DataContainer;
-import org.spongepowered.api.data.persistence.DataFormats;
-import org.spongepowered.api.item.recipe.Recipe;
-import org.spongepowered.api.item.recipe.RecipeRegistration;
 import org.spongepowered.api.item.recipe.crafting.ShapedCraftingRecipe;
+import org.spongepowered.common.accessor.item.crafting.ShapedRecipeAccessor;
+import org.spongepowered.common.item.recipe.SpongeRecipeRegistration;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 public class SpongeShapedCraftingRecipeRegistration<T extends ShapedCraftingRecipe> extends SpongeRecipeRegistration<T> {
 
     // Vanilla Recipe
-    private Item result;
-    private int count;
-    private List<String> pattern;
-    private Map<Character, Ingredient> key;
+    private final Item result;
+    private final int count;
+    private final List<String> pattern;
+    private final Map<Character, Ingredient> key;
 
     // Sponge Recipe
-    private ItemStack spongeResult;
+    private final ItemStack spongeResult;
 
+    private static IRecipeSerializer<?> SPONGE_CRAFTING_SHAPED = SpongeRecipeRegistration.register("crafting_shapeless", new SpongeShapedCraftingRecipeRegistration.Serializer());
+
+    public SpongeShapedCraftingRecipeRegistration(ResourceLocation key, String group, List<String> pattern, Map<Character, Ingredient> key1, ItemStack spongeResult) {
+        super(key, SpongeShapedCraftingRecipeRegistration.shapedSerializer(spongeResult), spongeResult.getItem(), group);
+        this.result = spongeResult.getItem();
+        this.count = spongeResult.getCount();
+        this.pattern = pattern;
+        this.key = key1;
+        this.spongeResult = spongeResult;
+    }
+
+    private static IRecipeSerializer<?> shapedSerializer(ItemStack spongeResult) {
+        return spongeResult.hasTag() ? SpongeShapedCraftingRecipeRegistration.SPONGE_CRAFTING_SHAPED : IRecipeSerializer.CRAFTING_SHAPED;
+    }
 
     @Override
     protected void serialize0(JsonObject json) {
@@ -84,8 +95,26 @@ public class SpongeShapedCraftingRecipeRegistration<T extends ShapedCraftingReci
 
         // Sponge Recipe
         if (spongeResult != null) {
-            json.add("spongeresult", this.serializeItemStack(spongeResult));
+            json.add("spongeresult", SpongeRecipeRegistration.serializeItemStack(spongeResult));
         }
     }
 
+    // Custom ShapelessRecipe.Serializer with support for:
+    // result full ItemStack instead of ItemType+Count
+    // TODO ingredient itemstacks
+    public static class Serializer extends ShapedRecipe.Serializer {
+
+        @Override
+        public ShapedRecipe read(ResourceLocation recipeId, JsonObject json) {
+            String s = JSONUtils.getString(json, "group", "");
+            Map<String, Ingredient> map = ShapedRecipeAccessor.deserializeKey(JSONUtils.getJsonObject(json, "key"));
+            String[] astring = ShapedRecipeAccessor.shrink(ShapedRecipeAccessor.patternFromJson(JSONUtils.getJsonArray(json, "pattern")));
+            int i = astring[0].length();
+            int j = astring.length;
+            NonNullList<Ingredient> nonnulllist = ShapedRecipeAccessor.accessor$deserializeIngredients(astring, map, i, j);
+            ItemStack itemstack = ShapedRecipe.deserializeItem(JSONUtils.getJsonObject(json, "result"));
+            ItemStack spongeStack = SpongeRecipeRegistration.deserializeItemStack(json.getAsJsonObject("spongeresult"));
+            return new ShapedRecipe(recipeId, s, i, j, nonnulllist, spongeStack == null ? itemstack : spongeStack);
+        }
+    }
 }

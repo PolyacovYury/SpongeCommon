@@ -28,20 +28,20 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.item.crafting.StonecuttingRecipe;
 import net.minecraft.util.ResourceLocation;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
+import org.spongepowered.api.item.recipe.RecipeRegistration;
 import org.spongepowered.api.item.recipe.single.StoneCutterRecipe;
-import org.spongepowered.common.item.recipe.crafting.custom.SpongeStonecuttingRecipe;
+import org.spongepowered.common.item.recipe.SpongeSingleItemRecipeRegistration;
 import org.spongepowered.common.item.util.ItemStackUtil;
 import org.spongepowered.common.util.SpongeCatalogBuilder;
 
 import java.util.function.Predicate;
 
-public final class SpongeStoneCutterRecipeBuilder extends SpongeCatalogBuilder<StoneCutterRecipe, StoneCutterRecipe.Builder> implements
+public final class SpongeStoneCutterRecipeBuilder extends SpongeCatalogBuilder<RecipeRegistration<StoneCutterRecipe>, StoneCutterRecipe.Builder> implements
         StoneCutterRecipe.Builder, StoneCutterRecipe.Builder.ResultStep, StoneCutterRecipe.Builder.EndStep {
 
     private net.minecraft.item.ItemStack result = net.minecraft.item.ItemStack.EMPTY;
@@ -75,13 +75,12 @@ public final class SpongeStoneCutterRecipeBuilder extends SpongeCatalogBuilder<S
     }
 
     @Override
-    protected StoneCutterRecipe build(ResourceKey key) {
+    protected RecipeRegistration<StoneCutterRecipe> build(ResourceKey key) {
         String group = ""; // unused
         if (this.ingredientPredicate == null) {
-            return (StoneCutterRecipe) new StonecuttingRecipe((ResourceLocation) (Object) key, group, this.ingredient, this.result);
+            return new SpongeSingleItemRecipeRegistration<>((ResourceLocation) (Object) key, group, this.ingredient, this.result);
         }
-        // TODO generate JSON
-        return (StoneCutterRecipe) new SpongeStonecuttingRecipe((ResourceLocation) (Object) key, group, this.ingredientPredicate, this.ingredient, this.result);
+        return new SpongeSingleItemRecipeRegistration<>((ResourceLocation) (Object) key, group, this.ingredientPredicate, this.result);
     }
 
     @Override

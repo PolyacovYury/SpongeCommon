@@ -27,19 +27,54 @@ package org.spongepowered.common.item.recipe;
 import com.google.gson.JsonObject;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.item.crafting.SingleItemRecipe;
+import net.minecraft.item.crafting.StonecuttingRecipe;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.JSONUtils;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
-import org.spongepowered.api.item.recipe.smelting.SmeltingRecipe;
+import org.spongepowered.api.item.inventory.ItemStackSnapshot;
+import org.spongepowered.api.item.recipe.single.StoneCutterRecipe;
 
-public class SpongeSingleItemRecipeRegistration<T extends SmeltingRecipe> extends SpongeRecipeRegistration<T> {
+import java.util.function.Predicate;
+
+public class SpongeSingleItemRecipeRegistration<T extends StoneCutterRecipe> extends SpongeRecipeRegistration<T> {
 
     // Vanilla Recipe
-    private Ingredient ingredient;
-    private Item result;
-    private int count;
+    private final Ingredient ingredient;
+    private final Item result;
+    private final int count;
 
     // Sponge Recipe
-    private ItemStack spongeResult;
+    private final ItemStack spongeResult;
+    private final Predicate<ItemStackSnapshot> spongeIngredient;
+
+    public static IRecipeSerializer<?> SPONGE_STONECUTTING = SpongeRecipeRegistration.register("stonecutting", new Serializer<>(StonecuttingRecipe::new));
+
+    public SpongeSingleItemRecipeRegistration(ResourceLocation key, String group, Ingredient ingredient, ItemStack spongeResult) {
+        super(key, SpongeSingleItemRecipeRegistration.serializer(spongeResult), spongeResult.getItem(), group);
+        this.ingredient = ingredient;
+        this.spongeIngredient = null;
+        this.result = spongeResult.getItem();
+        this.count = spongeResult.getCount();
+        this.spongeResult = spongeResult;
+    }
+
+    public SpongeSingleItemRecipeRegistration(ResourceLocation key, String group, Predicate<ItemStackSnapshot> spongeIngredient, ItemStack spongeResult) {
+        super(key, SpongeSingleItemRecipeRegistration.serializer(spongeResult), spongeResult.getItem(), group);
+        this.ingredient = null;
+        this.spongeIngredient = spongeIngredient;
+        this.result = spongeResult.getItem();
+        this.count = spongeResult.getCount();
+        this.spongeResult = spongeResult;
+        throw new UnsupportedOperationException("Not implemented yet"); // TODO custom serializer
+    }
+
+    private static IRecipeSerializer<?> serializer(ItemStack spongeResult) {
+        return spongeResult.hasTag() ? SpongeSingleItemRecipeRegistration.SPONGE_STONECUTTING : IRecipeSerializer.STONECUTTING;
+    }
 
     @Override
     protected void serialize0(JsonObject json) {
@@ -50,7 +85,48 @@ public class SpongeSingleItemRecipeRegistration<T extends SmeltingRecipe> extend
 
         // Sponge Recipe
         if (spongeResult != null) {
-            json.add("spongeresult", this.serializeItemStack(spongeResult));
+            json.add("spongeresult", SpongeRecipeRegistration.serializeItemStack(spongeResult));
+        }
+    }
+
+    public static class Serializer<R extends SingleItemRecipe> implements IRecipeSerializer<R> {
+        final Serializer.IRecipeFactory<R> factory;
+
+        protected Serializer(Serializer.IRecipeFactory<R> factory) {
+            this.factory = factory;
+        }
+
+        public R read(ResourceLocation recipeId, JsonObject json) {
+            String s = JSONUtils.getString(json, "group", "");
+            Ingredient ingredient;
+            if (JSONUtils.isJsonArray(json, "ingredient")) {
+                ingredient = Ingredient.deserialize(JSONUtils.getJsonArray(json, "ingredient"));
+            } else {
+                ingredient = Ingredient.deserialize(JSONUtils.getJsonObject(json, "ingredient"));
+            }
+
+            String s1 = JSONUtils.getString(json, "result");
+            int i = JSONUtils.getInt(json, "count");
+            ItemStack itemstack = new ItemStack(Registry.ITEM.getOrDefault(new ResourceLocation(s1)), i);
+            ItemStack spongeStack = SpongeRecipeRegistration.deserializeItemStack(json.getAsJsonObject("spongeresult"));
+            return this.factory.create(recipeId, s, ingredient, spongeStack == null ? itemstack : spongeStack);
+        }
+
+        public R read(ResourceLocation recipeId, PacketBuffer buffer) {
+            String s = buffer.readString(32767);
+            Ingredient ingredient = Ingredient.read(buffer);
+            ItemStack itemstack = buffer.readItemStack();
+            return this.factory.create(recipeId, s, ingredient, itemstack);
+        }
+
+        public void write(PacketBuffer buffer, R recipe) {
+            buffer.writeString(recipe.getGroup());
+            recipe.getIngredients().get(0).write(buffer);
+            buffer.writeItemStack(recipe.getRecipeOutput());
+        }
+
+        interface IRecipeFactory<T extends SingleItemRecipe> {
+            T create(ResourceLocation p_create_1_, String p_create_2_, Ingredient p_create_3_, ItemStack p_create_4_);
         }
     }
 

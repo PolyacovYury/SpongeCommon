@@ -87,15 +87,17 @@ public final class SpongeLifecycle {
     }
 
     public void establishRegistries() {
-        ((SpongeCatalogRegistry) this.game.getRegistry().getCatalogRegistry()).registerDefaultRegistries();
-        ((SpongeCatalogRegistry) this.game.getRegistry().getCatalogRegistry()).registerDefaultSuppliers();
+        final SpongeCatalogRegistry spongeCatalogRegistry = (SpongeCatalogRegistry) this.game.getRegistry().getCatalogRegistry();
+
+        spongeCatalogRegistry.registerDefaultRegistries();
+        spongeCatalogRegistry.registerDefaultSuppliers();
 
         this.game.getEventManager().post(new RegisterCatalogRegistryEventImpl(Cause.of(EventContext.empty(), this.game), this.game));
 
-        ((SpongeCatalogRegistry) this.game.getRegistry().getCatalogRegistry()).callRegisterCatalogEvents(Cause.of(EventContext.empty(), this.game), this.game);
+        spongeCatalogRegistry.callRegisterCatalogEvents(Cause.of(EventContext.empty(), this.game), this.game);
 
-
-        SpongeRecipeProvider.registerRecipes(((SpongeCatalogRegistry) this.game.getRegistry().getCatalogRegistry()).getRegistry(RecipeRegistration.class));
+        // After all plugins registered their recipes we serialize them
+        SpongeRecipeProvider.registerRecipes(spongeCatalogRegistry.getRegistry(RecipeRegistration.class));
     }
 
     public void callRegisterChannelEvent() {

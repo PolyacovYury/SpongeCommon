@@ -24,17 +24,65 @@
  */
 package org.spongepowered.common.item.recipe;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import net.minecraft.data.IFinishedRecipe;
+import net.minecraft.resources.IReloadableResourceManager;
+import net.minecraft.resources.SimpleReloadableResourceManager;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.registry.Registry;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.item.recipe.RecipeRegistration;
+import org.spongepowered.common.SpongeGame;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class SpongeRecipeProvider {
 
-    public static void registerRecipes(Registry<RecipeRegistration<?>> recipes) {
+    private static final int PACK_VERSION_1_15 = 6;
+
+    public static void registerRecipes(Registry<RecipeRegistration> recipes) {
         for (RecipeRegistration<?> recipe : recipes) {
             final IFinishedRecipe mcRecipe = (IFinishedRecipe) recipe;
-            // TODO serialize recipes
+            SpongeRecipeProvider.save(mcRecipe);
         }
     }
+
+    private static void save(IFinishedRecipe recipe) {
+        Path path = Paths.get("world"); // TODO check path
+
+        SpongeRecipeProvider.saveToFile(recipe.getRecipeJson(),
+                path.resolve("datapacks/plugin-recipes/data/" + recipe.getID().getNamespace() + "/recipes/" + recipe.getID().getPath() + ".json"));
+        JsonObject jsonobject = recipe.getAdvancementJson();
+        if (jsonobject != null) {
+            SpongeRecipeProvider.saveToFile(jsonobject,
+                    path.resolve("datapacks/plugin-recipes/data/" + recipe.getID().getNamespace() + "/advancements/" + recipe.getAdvancementID().getPath() + ".json"));
+        }
+
+        final Path packMeta = path.resolve("datapacks/plugin-recipes").resolve("pack.mcmeta");
+        final JsonObject packDataRoot = new JsonObject();
+        final JsonObject packData = new JsonObject();
+        packDataRoot.add("pack", packData);
+        packData.addProperty("pack_format", SpongeRecipeProvider.PACK_VERSION_1_15);
+        packData.addProperty("description", "Sponge Plugin provided Recipes");
+        SpongeRecipeProvider.saveToFile(packDataRoot, packMeta);
+    }
+
+    private static void saveToFile(JsonObject json, Path pathIn) {
+        try {
+            Files.createDirectories(pathIn.getParent());
+            try (BufferedWriter bufferedwriter = Files.newBufferedWriter(pathIn)) {
+                bufferedwriter.write(json.toString());
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
+    }
+
 
 }

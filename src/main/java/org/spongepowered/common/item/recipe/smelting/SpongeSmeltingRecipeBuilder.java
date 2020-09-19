@@ -27,34 +27,23 @@ package org.spongepowered.common.item.recipe.smelting;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import net.minecraft.data.CookingRecipeBuilder;
-import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CookingRecipeSerializer;
+import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.ResourceKey;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.item.ItemType;
+import org.spongepowered.api.item.recipe.RecipeRegistration;
 import org.spongepowered.api.item.recipe.RecipeType;
 import org.spongepowered.api.item.recipe.smelting.SmeltingRecipe;
 import org.spongepowered.common.util.SpongeCatalogBuilder;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-public class SpongeSmeltingRecipeBuilder extends SpongeCatalogBuilder<SmeltingRecipe, SmeltingRecipe.Builder>
+public class SpongeSmeltingRecipeBuilder extends SpongeCatalogBuilder<RecipeRegistration<SmeltingRecipe>, SmeltingRecipe.Builder>
         implements SmeltingRecipe.Builder.ResultStep, SmeltingRecipe.Builder.IngredientStep, SmeltingRecipe.Builder.EndStep {
-
-    private static final Gson GSON = (new GsonBuilder()).setPrettyPrinting().create();
 
     private IRecipeType type;
     private Ingredient ingredient;
@@ -113,7 +102,7 @@ public class SpongeSmeltingRecipeBuilder extends SpongeCatalogBuilder<SmeltingRe
     }
 
     @Override
-    protected SmeltingRecipe build(ResourceKey key) {
+    protected RecipeRegistration<SmeltingRecipe> build(ResourceKey key) {
         checkNotNull(this.type);
         checkNotNull(this.ingredient);
         checkNotNull(this.result);
@@ -124,73 +113,34 @@ public class SpongeSmeltingRecipeBuilder extends SpongeCatalogBuilder<SmeltingRe
             this.experience = 0f;
         }
 
-        CookingRecipeBuilder builder = null;
+        IRecipeSerializer<?> vanillaSerializer;
         if (this.type == IRecipeType.BLASTING) {
             if (this.smeltTime == null) {
                 this.smeltTime = 100;
             }
-            builder = CookingRecipeBuilder.blastingRecipe(this.ingredient, () -> this.result,
-                    this.experience,
-                    this.smeltTime);
+            vanillaSerializer = IRecipeSerializer.BLASTING;
         } else if (this.type == IRecipeType.CAMPFIRE_COOKING) {
             if (this.smeltTime == null) {
                 this.smeltTime = 600;
             }
-            builder = CookingRecipeBuilder.cookingRecipe(this.ingredient, () -> this.result,
-                    this.experience, this.smeltTime,
-                    CookingRecipeSerializer.CAMPFIRE_COOKING);
+            vanillaSerializer = CookingRecipeSerializer.CAMPFIRE_COOKING;
         } else if (this.type == IRecipeType.SMOKING) {
             if (this.smeltTime == null) {
                 this.smeltTime = 100;
             }
-            builder = CookingRecipeBuilder.cookingRecipe(this.ingredient, () -> this.result,
-                    this.experience, this.smeltTime,
-                    CookingRecipeSerializer.SMOKING);
+            vanillaSerializer = CookingRecipeSerializer.SMOKING;
         } else if (this.type == IRecipeType.SMELTING) {
             if (this.smeltTime == null) {
                 this.smeltTime = 200;
             }
-            builder = CookingRecipeBuilder.smeltingRecipe(this.ingredient, () -> this.result,
-                    this.experience, this.smeltTime);
+            vanillaSerializer = CookingRecipeSerializer.SMELTING;
+        } else {
+            throw new IllegalArgumentException("Unknown RecipeType " + this.type);
         }
 
-        // TODO criterions
-        // TODO groups
-        // TODO custom CookingRecipeSerializers
-
-        ResourceLocation resourceLocation = (ResourceLocation) (Object) this.key;
-        if (builder != null) {
-            builder.build(this::save, resourceLocation);
-        }
-
-        MinecraftServer server = (MinecraftServer) Sponge.getServer();
-        server.reload();
-        return (SmeltingRecipe) server.getRecipeManager().getRecipe(resourceLocation).get();
-    }
-
-    private void save(IFinishedRecipe recipe) {
-        Path path = null; // TODO get basepath
-
-        this.saveToFile(recipe.getRecipeJson(),
-                path.resolve("data/" + recipe.getID().getNamespace() + "/recipes/" + recipe.getID().getPath() + ".json"));
-        JsonObject jsonobject = recipe.getAdvancementJson();
-        if (jsonobject != null) {
-            this.saveToFile(jsonobject,
-                    path.resolve("data/" + recipe.getID().getNamespace() + "/advancements/" + recipe.getAdvancementID().getPath() + ".json"));
-        }
-    }
-
-    private void saveToFile(JsonObject json, Path pathIn) {
-        try {
-            String s = GSON.toJson(json);
-            Files.createDirectories(pathIn.getParent());
-            try (BufferedWriter bufferedwriter = Files.newBufferedWriter(pathIn)) {
-                bufferedwriter.write(s);
-            }
-        } catch (IOException e) {
-           throw new IllegalStateException(e);
-        }
-
+        final ItemStack spongeResult = new ItemStack(() -> this.result);
+        return new SpongeCookingRecipeRegistration<>((ResourceLocation) (Object) this.key, vanillaSerializer, this.group,
+                this.ingredient, this.experience, this.smeltTime, spongeResult);
     }
 
 }

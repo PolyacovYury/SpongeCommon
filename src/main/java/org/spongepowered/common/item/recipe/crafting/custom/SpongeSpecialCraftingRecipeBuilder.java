@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.item.recipe.crafting;
+package org.spongepowered.common.item.recipe.crafting.custom;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -31,6 +31,7 @@ import net.minecraft.util.ResourceLocation;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.crafting.CraftingInventory;
+import org.spongepowered.api.item.recipe.RecipeRegistration;
 import org.spongepowered.api.item.recipe.crafting.CraftingRecipe;
 import org.spongepowered.api.item.recipe.crafting.SpecialCraftingRecipe;
 import org.spongepowered.api.world.server.ServerWorld;
@@ -42,7 +43,7 @@ import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
-public final class SpongeSpecialCraftingRecipeBuilder extends SpongeCatalogBuilder<SpecialCraftingRecipe, SpecialCraftingRecipe.Builder> implements
+public final class SpongeSpecialCraftingRecipeBuilder extends SpongeCatalogBuilder<RecipeRegistration<SpecialCraftingRecipe>, SpecialCraftingRecipe.Builder> implements
         SpecialCraftingRecipe.Builder, SpecialCraftingRecipe.Builder.ResultStep, SpecialCraftingRecipe.Builder.EndStep {
 
     private BiPredicate<CraftingInventory, ServerWorld> biPredicate;
@@ -103,7 +104,7 @@ public final class SpongeSpecialCraftingRecipeBuilder extends SpongeCatalogBuild
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    public SpecialCraftingRecipe build(ResourceKey key) {
+    public RecipeRegistration<SpecialCraftingRecipe> build(ResourceKey key) {
         checkState(this.biPredicate != null || this.exemplaryShape != null, "predicate or shape");
         checkState(this.resultFunction != null || this.exemplaryResult != null, "resultfunction or result");
 
@@ -113,16 +114,9 @@ public final class SpongeSpecialCraftingRecipeBuilder extends SpongeCatalogBuild
 
         // TODO canEmulate with Shapeless/Shaped Serializer
 
-        SpongeRecipeRegistration.register(resourceLocation, new SpecialRecipeSerializer<>(rl ->
-                new SpongeSpecialRecipe(rl, this.biPredicate, this.remainingItemsFunction, this.resultFunction)
-        ));
 
         // TODO generate JSON?
-
-        return (SpecialCraftingRecipe) (Object) new SpongeSpecialRecipe(resourceLocation,
-                this.biPredicate,
-                this.remainingItemsFunction,
-                this.resultFunction);
+        return new SpongeSpecialCraftingRecipeRegistration<>(resourceLocation, this.biPredicate, this.remainingItemsFunction, this.resultFunction, this.exemplaryResult, this.exemplaryShape);
     }
 
     @Override

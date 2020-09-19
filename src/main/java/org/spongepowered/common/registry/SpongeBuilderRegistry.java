@@ -160,7 +160,7 @@ import org.spongepowered.common.item.merchant.SpongeTradeOfferGenerator;
 import org.spongepowered.common.item.recipe.crafting.SpongeIngredientBuilder;
 import org.spongepowered.common.item.recipe.crafting.SpongeShapedCraftingRecipeBuilder;
 import org.spongepowered.common.item.recipe.crafting.SpongeShapelessCraftingRecipeBuilder;
-import org.spongepowered.common.item.recipe.crafting.SpongeSpecialCraftingRecipeBuilder;
+import org.spongepowered.common.item.recipe.crafting.custom.SpongeSpecialCraftingRecipeBuilder;
 import org.spongepowered.common.item.recipe.crafting.SpongeStoneCutterRecipeBuilder;
 import org.spongepowered.common.item.recipe.smelting.SpongeSmeltingRecipeBuilder;
 import org.spongepowered.common.placeholder.SpongePlaceholderComponentBuilder;

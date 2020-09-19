@@ -30,31 +30,31 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.chars.Char2ObjectArrayMap;
-import net.minecraft.item.crafting.ShapedRecipe;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.recipe.RecipeRegistration;
 import org.spongepowered.api.item.recipe.crafting.Ingredient;
 import org.spongepowered.api.item.recipe.crafting.ShapedCraftingRecipe;
-import org.spongepowered.common.accessor.item.crafting.ShapedRecipeAccessor;
 import org.spongepowered.common.item.util.ItemStackUtil;
 import org.spongepowered.common.util.SpongeCatalogBuilder;
 
-import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 public final class SpongeShapedCraftingRecipeBuilder extends SpongeCatalogBuilder<RecipeRegistration<ShapedCraftingRecipe>, ShapedCraftingRecipe.Builder> implements
         ShapedCraftingRecipe.Builder, ShapedCraftingRecipe.Builder.AisleStep.ResultStep,
         ShapedCraftingRecipe.Builder.RowsStep.ResultStep, ShapedCraftingRecipe.Builder.EndStep {
 
-    private final List<String> aisle = Lists.newArrayList();
-    private final Map<Character, Ingredient> ingredientMap = new Char2ObjectArrayMap<>();
+    private List<String> aisle = Lists.newArrayList();
+    private Map<Character, Ingredient> ingredientMap = new Char2ObjectArrayMap<>();
     private ShapedCraftingRecipe shape;
 
     private ItemStack result = ItemStack.empty();
@@ -149,35 +149,27 @@ public final class SpongeShapedCraftingRecipeBuilder extends SpongeCatalogBuilde
         final Iterator<String> aisleIterator = this.aisle.iterator();
         String aisleRow = aisleIterator.next();
         final int width = aisleRow.length();
-        int height = 1;
 
         checkState(width > 0, "The aisle cannot be empty.");
 
         while (aisleIterator.hasNext()) {
-            height++;
             aisleRow = aisleIterator.next();
             checkState(aisleRow.length() == width, "The aisle has an inconsistent width.");
         }
 
-        final String[] keys = this.aisle.toArray(new String[this.aisle.size()]);
-        final Map<String, net.minecraft.item.crafting.Ingredient> ingredientsMap = this.ingredientMap.entrySet().stream().collect(
-                Collectors.toMap(e -> e.getKey().toString(), e -> IngredientUtil.toNative(e.getValue())));
+        final Map<Character, net.minecraft.item.crafting.Ingredient> ingredientsMap = this.ingredientMap.entrySet().stream().collect(
+                Collectors.toMap(Map.Entry::getKey, e -> IngredientUtil.toNative(e.getValue())));
 
         // Default space to Empty Ingredient
-        ingredientsMap.putIfAbsent(" ", net.minecraft.item.crafting.Ingredient.EMPTY);
-
-        // Throws JsonException when pattern is not complete or defines unused Ingredients
-        final NonNullList<net.minecraft.item.crafting.Ingredient> ingredients = ShapedRecipeAccessor
-            .accessor$deserializeIngredients(keys, ingredientsMap, width, height);
-        // TODO generate JSON
-        return (ShapedCraftingRecipe) new ShapedRecipe((ResourceLocation)(Object) key, this.groupName, width, height, ingredients, ItemStackUtil.toNative(this.result));
+//        ingredientsMap.putIfAbsent(' ', net.minecraft.item.crafting.Ingredient.EMPTY);
+        return new SpongeShapedCraftingRecipeRegistration<>((ResourceLocation)(Object) key, this.groupName, this.aisle, ingredientsMap, ItemStackUtil.toNative(this.result));
     }
 
     @Override
     public ShapedCraftingRecipe.Builder reset() {
         super.reset();
-        this.aisle.clear();
-        this.ingredientMap.clear();
+        this.aisle = new ArrayList<>();
+        this.ingredientMap = new HashMap<>();
         this.result = ItemStack.empty();
         this.groupName = "";
         return this;

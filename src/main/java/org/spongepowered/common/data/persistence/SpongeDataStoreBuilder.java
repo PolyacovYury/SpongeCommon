@@ -119,7 +119,7 @@ public class SpongeDataStoreBuilder implements DataStore.Builder {
                 return resultMap;
             });
         } else {
-            deserializer = (view, dataQuery) -> (Optional<T>) view.getObject(dataQuery, rawType);
+            deserializer = (view, dataQuery) -> (Optional<T>) view.get(dataQuery);
         }
         return deserializer;
     }
