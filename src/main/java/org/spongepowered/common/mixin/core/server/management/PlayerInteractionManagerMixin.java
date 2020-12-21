@@ -208,7 +208,8 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
                 this.isDestroyingBlock = true;
                 this.destroyPos = pos;
                 final int i = (int)(f * 10.0F);
-                this.world.sendBlockBreakProgress(this.player.getEntityId(), pos, i);
+                //this.world.sendBlockBreakProgress(this.player.getEntityId(), pos, i);
+                this.world.notifyBlockUpdate(pos, iblockstate, iblockstate, 0);
                 this.durabilityRemainingOnBlock = i;
             }
         }
