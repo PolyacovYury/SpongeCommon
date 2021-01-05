@@ -135,6 +135,10 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
             this.impl$interactBlockLeftClickEventCancelled = false;
             ci.cancel();
         }
+        if (this.world.isBlockLoaded(pos)) {
+            IBlockState iblockstate = this.world.getBlockState(pos);
+            this.world.notifyBlockUpdate(pos, iblockstate, iblockstate, 0);
+        }
     }
 
     /**
