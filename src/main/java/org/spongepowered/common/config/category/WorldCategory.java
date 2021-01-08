@@ -94,16 +94,6 @@ public class WorldCategory extends ConfigCategory {
             + "and increases the chance for a drop in tps. (Default: 100)")
     private int maxChunkUnloads = 100;
 
-    @Setting(value = "max-chunk-lifetime", comment = ""
-            + "The number of ticks a chunk will stay in memory without saving.\n"
-            + "Note: this setting only applies to chunks gc forcibly saving chunks\n"
-            + "(controlled by 'chunk-gc-tick-interval' and 'chunk-gc-load-threshold')\n"
-            + "Note: Useless if 'auto-save-interval' is enabled and less than this value\n"
-            + "Note: 'auto-save-interval' becomes mostly useless if both are enabled and\n"
-            + "it is bigger than this value\n"
-            + "(Default: 0)")
-    private int maxChunkLifetime = 0;
-
     @Setting(value = "chunk-gc-load-threshold", comment = ""
             + "The number of newly loaded chunks before triggering a forced cleanup.\n"
             + "Note: When triggered, the loaded chunk threshold will reset and start incrementing.\n"
@@ -236,10 +226,6 @@ public class WorldCategory extends ConfigCategory {
 
     public int getMaxChunkUnloads() {
         return this.maxChunkUnloads;
-    }
-
-    public int getMaxChunkLifetime() {
-        return this.maxChunkLifetime;
     }
 
     public double getItemMergeRadius() {
