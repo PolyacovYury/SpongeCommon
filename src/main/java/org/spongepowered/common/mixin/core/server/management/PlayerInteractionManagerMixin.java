@@ -277,7 +277,7 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
 
         this.bridge$setLastInteractItemOnBlockCancelled(event.isCancelled() || event.getUseItemResult() == Tristate.FALSE);
 
-        if (event.isCancelled()) {
+        if (event.isCancelled() || event.getUseItemResult() == Tristate.FALSE || event.getUseBlockResult() == Tristate.FALSE) {
             final IBlockState state = (IBlockState) currentSnapshot.getState();
 
             if (state.getBlock() == Blocks.COMMAND_BLOCK) {
@@ -305,7 +305,8 @@ public abstract class PlayerInteractionManagerMixin implements PlayerInteraction
             ((PlayerInteractionManagerBridge) this.player.interactionManager).bridge$setInteractBlockRightClickCancelled(true);
 
             ((EntityPlayerMP) player).sendContainerToPlayer(player.inventoryContainer);
-            return SpongeImplHooks.getInteractionCancellationResult(forgeEventObject);
+            if (event.isCancelled())
+                return SpongeImplHooks.getInteractionCancellationResult(forgeEventObject);
         }
         // Sponge End
 
